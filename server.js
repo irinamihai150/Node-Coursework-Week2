@@ -34,7 +34,7 @@ app.post("/messages", (req, res) => {
 
   // build our new resourse
   const newMessage = {
-    id: 3,
+    // id: 3,
     from: req.body.from,
     text: req.body.text,
     timestamp: moment(),
@@ -65,23 +65,42 @@ app.delete("/messages/:id", (req, res) => {
   }
   const messageIndex = messages.findIndex((m) => m.id === id);
   messages.splice(messageIndex, 1);
+
   res.send("message deleted");
 });
 
-app.get("/messages/search", (req, res) => {
-  if (req.query.search) {
-    let search = req.query.search.text.toLowerCase();
-    let matched = messages.find((message) =>
-      message.text.toLowerCase().includes(search)
-    );
+app.get("/search", (req, res) => {
+  if (req.query.text) {
+    let search = req.query.text;
+    let matched = messages.filter((message) => message.text.includes(search));
     res.send(matched);
   } else {
-    res.send("");
+    res.send("Not found");
   }
 }),
-  app.get("messages/latest", (req, res) => {
-    res.json(messages[messages.length - 1]);
+  app.get("/latest", (req, res) => {
+    let latestMessage = messages.filter((message) => {
+      return parseInt(message.id) > messages.length - 11;
+    });
+    res.status(201).json(latestMessage);
   });
+app.put("/messages:id", (req, res) => {
+  if (!req.query.text || !req.query.from) {
+    res.status(400).send("from and text are required");
+  }
+  //check message exist
+  let messageId = parseInt(req.params.id);
+  let messageIndex = messages.find((m) => m.id === messageId);
+  if (messageIndex < 0) {
+    res.sendStatus(404);
+  }
+  let updatedMessage = {
+    id: messageId,
+    from: req.body.from,
+    text: req.body.text,
+  };
+});
+
 const port = 3131;
 
 app.listen(port, () => {
